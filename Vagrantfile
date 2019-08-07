@@ -18,4 +18,9 @@ Vagrant.configure("2") do |config|
   config.vm.define "k2" do |k2|
     k2.vm.box = "godfryd/lxc-ubuntu-18.04" 
   end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = playbook.yml
+    ansible.inventory_path = "inventories/dev/"
+  end
 end
