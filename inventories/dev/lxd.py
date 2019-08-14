@@ -35,7 +35,7 @@ from ansible.module_utils.six.moves import configparser
 # Set up defaults
 resource = 'local:'
 available_groups = {'master', 'workers'}
-connection = 'local'
+connection = 'lxd'
 hosts = {}
 result = {}
 
@@ -99,7 +99,8 @@ if distutils.spawn.find_executable('lxc'):
                             
                             
                             result[group_name]['hosts'].append(name)
-                            result[group_name]['vars']['ansible_host'] = name
+                            result[group_name]['vars']['ansible_ssh_user'] = "vagrant"
+                            result[group_name]['vars']['ansible_ssh_host'] = "local:"+real_name
                             #hosts[name] = ip
 
     # Set the other containers result values
@@ -116,6 +117,6 @@ elif len(sys.argv) == 3 and sys.argv[1] == '--host':
         if connection == 'lxd':
             print(json.dumps({'ansible_connection': connection}))
         else:
-            print(json.dumps({'ansible_connection': connection, 'ansible_host': hosts[sys.argv[2]]}))
+            print(json.dumps({'ansible_ssh_user': 'vagrant', 'ansible_connection': connection, 'ansible_host': hosts[sys.argv[2]]}))
 else:
     print("Need an argument, either --list or --host <host>")
