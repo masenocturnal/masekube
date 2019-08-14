@@ -7,3 +7,21 @@ This is really only used as a playground for developing and testing kubernetes b
 
 
 ```
+## Requirements
+
+* Ubuntu 18.04+ (currently only tested)
+* LXD
+* Vagrant
+* Vagrant LXD plugin
+* Ansible must be installed on the host
+* Python 
+* Git
+
+
+## Fetch the role requirements
+
+```
+$ ansible-galaxy install -r requirements.yml
+$ vagrant up
+```
+

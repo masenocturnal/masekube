@@ -1,0 +1,8 @@
+---
+# tasks file for masenocturnal.k8sbase
+# todo make into a list
+- name: Ensure dependencies are installed.
+  apt:
+    name:
+      - gnupg2
+    state: present
