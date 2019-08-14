@@ -20,7 +20,12 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = playbook.yml
-    ansible.inventory_path = "inventories/dev/"
+    ansible.playbook = "playbook.yml"
+    ansible.compatibility_mode = "2.0"
+    ansible.inventory_path = "./inventories/dev/lxd.py"
+    ansible.groups = {
+      "master" => ["master[0:4]"],
+      "workers" => ["worker[0:8]"]
+    }
   end
 end

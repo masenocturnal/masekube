@@ -27,19 +27,23 @@ from subprocess import Popen, PIPE
 import distutils.spawn
 import sys
 import json
+import re
 from pprint import pprint
 
 from ansible.module_utils.six.moves import configparser
 
 # Set up defaults
 resource = 'local:'
-available_groups = {'master', 'workers', 'lxd'}
-connection = 'lxd'
+available_groups = {'master', 'workers'}
+connection = 'local'
 hosts = {}
 result = {}
 
+
+
 # Read the settings from the lxd.ini file
 config = configparser.SafeConfigParser()
+
 config.read(os.path.dirname(os.path.realpath(__file__)) + '/lxd.ini')
 #if config.has_option('lxd', 'resource'):
     #resource = config.get('lxd', 'resource')
@@ -48,6 +52,8 @@ config.read(os.path.dirname(os.path.realpath(__file__)) + '/lxd.ini')
 if config.has_option('lxd', 'connection'):
     connection = config.get('lxd', 'connection')
 
+regex = re.compile('^.*-.*-(.*)-.*$')
+
 # Ensure executable exists
 if distutils.spawn.find_executable('lxc'):
 
@@ -55,10 +61,13 @@ if distutils.spawn.find_executable('lxc'):
     for group in available_groups:
         result[group] = {}
         result[group]['hosts'] = []
+        result[group]['vars'] = {} 
+        result[group]['vars']['ansible_connection'] = connection
 
     # Run the command and load json result
     pipe = Popen(['lxc', 'list', resource, '--format', 'json'], stdout=PIPE, universal_newlines=True)
     lxdjson = json.load(pipe.stdout)
+    # print(json.dumps(lxdjson))
 
     # Iterate the json lxd output
     for item in lxdjson:
@@ -78,23 +87,27 @@ if distutils.spawn.find_executable('lxc'):
                     if 'family' in address and address['family'] == 'inet':
                         if 'address' in address:
                             ip = address['address']
-                            name = item['name']
-                            
-                            group_name = 'workers'
-                            if name.find('master') > 0:
-                                group_name = 'master';
-                            
+                            real_name = item['name']
+                            x = regex.match(real_name)
+
+                            name = x.group(1)
                             # Add the host to the results and the host array
+
+                            group_name = 'workers'
+                            if name.find('master') >= 0:
+                                group_name = 'master'
+                            
+                            
                             result[group_name]['hosts'].append(name)
-                            hosts[name] = ip
+                            result[group_name]['vars']['ansible_host'] = name
+                            #hosts[name] = ip
 
     # Set the other containers result values
-    result['lxd']['vars'] = {}
-    result['lxd']['vars']['ansible_connection'] = connection
+    # result['lxd']['vars'] = {}
+    # result['lxd']['vars']['ansible_connection'] = connection
 
 # Process arguments
 if len(sys.argv) == 2 and sys.argv[1] == '--list':
-    
     print(json.dumps(result))
 elif len(sys.argv) == 3 and sys.argv[1] == '--host':
     if sys.argv[2] == 'localhost':
